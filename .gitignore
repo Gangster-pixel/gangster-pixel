@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+_baw_args.json
+gangster.local.json

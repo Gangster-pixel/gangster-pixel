@@ -1,0 +1,7 @@
+{
+  "chainId": 56,
+  "rpc": "https://bsc-rpc.publicnode.com",
+  "configUrl": "https://meta.gangsterpixel.com/skill/gangster.json",
+  "rounds": "https://meta.gangsterpixel.com/rounds/{id}.json",
+  "_comment": "Gangster Pixel skill config. Contract addresses come from configUrl on every run; if addresses are pinned here and the website lists different ones, the skill stops."
+}
