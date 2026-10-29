@@ -32,3 +32,5 @@ Both commands allow **partial fills**: one `buy` tx per listing, sent in order; 
 
 Buys the N cheapest active listings (optionally one tier) priced at or below `--max-price`. Listings are picked when the command runs, so the result follows the market at that moment; if fewer than N match, it buys as many as match.
 
+Without `--send` it prints `planned`, `plannedTotalBNB` and a `confirmCommand`: a `buy-many --ids id@price,… --send` that buys exactly the previewed listings at no more than the previewed prices. Use that after the user confirms. `sweep --send` re-picks the floor at send time; without `--max-price` that has no price bound, so the CLI adds a warning.
+

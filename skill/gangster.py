@@ -107,6 +107,36 @@ def eth(x):
     return f"{x / 1e18:.6f}"
 
 
+def bnb_exact(wei):
+    # full precision, no float rounding: used inside commands that pin a price (id@price)
+    from decimal import Decimal
+    v = format(Decimal(int(wei)) / Decimal(10**18), "f")
+    return v.rstrip("0").rstrip(".") if "." in v else v
+
+
+AGENT_ID_REGISTRY = "0x60b9262456de011f7d15a54cdd8c48baaa8b022f"
+
+
+def check_contracts():
+    # The addresses come from a config file / the website. Make sure they are one consistent, genuine Gangster set before
+    # any command runs: the market must point at this vault and be allowed by it, the distributor must point at this vault,
+    # and on BNB Chain the vault must use the real Agent ID registry. A forged config fails here.
+    try:
+        bad = []
+        if MARKET.functions.NFT().call() != VAULT.address or MARKET.functions.VAULT().call() != VAULT.address:
+            bad.append("market does not belong to this vault")
+        if not VAULT.functions.operatorAllowed(MARKET.address).call():
+            bad.append("market is not allowed by the vault")
+        if DIST and DIST.functions.VAULT().call() != VAULT.address:
+            bad.append("distributor does not belong to this vault")
+        if int(CFG.get("chainId", 56)) == 56 and VAULT.functions.AGENT_ID().call().lower() != AGENT_ID_REGISTRY:
+            bad.append("vault does not use the Binance Agent ID registry")
+    except Exception as e:
+        bad = [f"cannot read the contracts ({str(e)[:120]})"]
+    if bad:
+        fail("contract check failed: " + "; ".join(bad) + ". Do not send anything; re-install the skill from https://github.com/Gangster-pixel/gangster-pixel")
+
+
 def tok_fmt(x):
     # token amount as a string: whole tokens as an integer, otherwise 18 decimals with trailing zeros stripped
     if x % 10**18 == 0:
@@ -434,6 +464,9 @@ def cmd_buy(args):
     if not VAULT.functions.canReceive(me).call():
         fail("this address cannot receive NFTs right now (no Agent ID while public mint is closed, or a contract not on the allow-list)")
     price = l[1]
+    cap = parse_bnb(getattr(args, "max_price", None))
+    if cap is not None and price > cap:  # the seller re-priced above what the user saw: never pay more than the cap
+        fail(f"price {bnb_exact(price)} BNB is above your --max-price {bnb_exact(cap)} BNB; not buying")
     fee = price * min(MARKET.functions.feeBps().call(), l[5]) // 10000  # fee = min(rate at listing time, current rate)
     txs = [tx_of(MARKET, MARKET.functions.buy(args.id), price, f"buy #{args.id} for {eth(price)} BNB (market fee {eth(fee)} included)")]
     finish(txs, args, {"id": args.id, "priceBNB": eth(price), "seller": l[0], "nft": nft_info(args.id)})
@@ -454,7 +487,7 @@ def parse_bnb(x):
     return None if x in (None, "") else Web3.to_wei(str(x), "ether")
 
 
-def buy_batch(args, me, picks, skipped):
+def buy_batch(args, me, picks, skipped, pin=False):
     # picks: listings to buy, in order. Partial fills are expected: anything that fails is skipped and the rest continue.
     bal = w3.eth.get_balance(me)
     cur_fee = MARKET.functions.feeBps().call()
@@ -475,6 +508,9 @@ def buy_batch(args, me, picks, skipped):
     if not args.send:
         res["transactions"] = [p["tx"] for p in plan]
         res["hint"] = "Send in order; if one fails (sold or re-priced meanwhile), skip it and continue. Or add --send to let this CLI do that."
+        if pin:  # sweep: lock in exactly what was previewed, so confirming never re-picks a different floor at send time
+            res["confirmCommand"] = f"gangster buy-many --ids {','.join(str(p['id']) + '@' + bnb_exact(p['price']) for p in plan)} --address {me} --send"
+            res["hint"] = "Show 'planned' and 'plannedTotalBNB' to the user. After they confirm, run 'confirmCommand' (it buys exactly these ids at no more than these prices)."
         out(res); return
     bought, failed, spent = [], [], 0
     for p in plan:
@@ -528,9 +564,11 @@ def cmd_sweep(args):
     rows.sort(key=lambda r: (r["price"], r["id"]))
     picks = [r for r in rows if cap is None or r["price"] <= cap][: args.count]
     skipped = []
+    if cap is None and args.send:
+        skipped.append({"warning": "no --max-price: these are bought at whatever the floor is at send time; prefer preview + confirmCommand"})
     if len(picks) < args.count:
         skipped.append({"reason": f"only {len(picks)} listing(s) match (wanted {args.count})" + (f" under the {eth(cap)} BNB cap" if cap is not None else "")})
-    buy_batch(args, me, picks, skipped)
+    buy_batch(args, me, picks, skipped, pin=True)
 
 
 def cmd_market(args):
@@ -581,13 +619,14 @@ def main():
     a = sp.add_parser("burn", help="burn an NFT and get the tokens back", parents=[common]); a.add_argument("--id", type=int, required=True)
     a = sp.add_parser("list", help="list an NFT for sale", parents=[common]); a.add_argument("--id", type=int, required=True); a.add_argument("--price", type=float, required=True, help="BNB")
     a = sp.add_parser("cancel", help="cancel a listing", parents=[common]); a.add_argument("--id", type=int, required=True)
-    a = sp.add_parser("buy", help="buy a listed NFT", parents=[common]); a.add_argument("--id", type=int, required=True)
+    a = sp.add_parser("buy", help="buy a listed NFT", parents=[common]); a.add_argument("--id", type=int, required=True); a.add_argument("--max-price", help="refuse if the listing now costs more than this (BNB)")
     a = sp.add_parser("buy-many", help="buy several listings by id (partial fill allowed)", parents=[common]); a.add_argument("--ids", required=True, help="comma-separated ids, each optionally with a price cap: 8@0.01,10,14@0.02"); a.add_argument("--max-price", help="max price per NFT in BNB (applies to every id)")
     a = sp.add_parser("sweep", help="buy the N cheapest listings (partial fill allowed)", parents=[common]); a.add_argument("--count", type=int, required=True); a.add_argument("--max-price", help="max price per NFT in BNB"); a.add_argument("--tier", type=int, help="1 soldier / 2 captain / 3 boss")
     a = sp.add_parser("market", help="show active listings", parents=[common]); a.add_argument("--tier", type=int); a.add_argument("--limit", type=int, default=50)
     sp.add_parser("claim", help="claim dividends", parents=[common])
     sp.add_parser("cancel-all", help="void all my listings in one tx", parents=[common]).set_defaults(func=cmd_cancel_all)
     args = p.parse_args()
+    check_contracts()
     try:
         globals()[f"cmd_{args.cmd.replace('-', '_')}"](args)
     except SystemExit:
