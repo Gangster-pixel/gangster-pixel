@@ -15,7 +15,7 @@ Lists the wallet's NFTs with `tier`, `units`, `lockedTokens`, `seed` (random ima
 ## Mint
 
 `gangster mint --count N --address <addr>` → up to two txs: `approve` (only if the allowance is short) then `mint(N)` with `value = feePerUnit × N`.
-Locks `UNIT × N` tokens. Fails early if the wallet has too few tokens, no Agent ID, or minting is paused. Soldiers are uncapped.
+Locks `UNIT × N` tokens. The wallet needs the locked token (`token` in `status`) besides BNB for the fee and gas. If that token is **Wrapped BNB** and the wallet is short, `mint` first wraps the missing amount from BNB (one extra `deposit` tx, 1 BNB → 1 WBNB), so a wallet holding only BNB can mint. For any other token it stops and says which token, how much is missing and how to buy it. Also fails early with no Agent ID or while minting is paused. Soldiers are uncapped.
 
 ## Craft
 

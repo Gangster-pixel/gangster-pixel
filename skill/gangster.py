@@ -141,7 +141,7 @@ def tok_fmt(x):
     # token amount as a string: whole tokens as an integer, otherwise 18 decimals with trailing zeros stripped
     if x % 10**18 == 0:
         return str(x // 10**18)
-    return f"{x / 10**18:.18f}".rstrip("0").rstrip(".")
+    return f"{x // 10**18}.{x % 10**18:018d}".rstrip("0").rstrip(".")  # integer math: no float error
 
 
 # ---------------------------------------------------------------- baw
@@ -387,6 +387,32 @@ def cmd_my(args):
     out({"success": True, "address": me, "nfts": [nft_info(i) for i in my_ids(me)]})
 
 
+WBNB_ABI = [{"name": "deposit", "type": "function", "stateMutability": "payable", "inputs": [], "outputs": []},
+            {"name": "symbol", "type": "function", "stateMutability": "view", "inputs": [], "outputs": [{"type": "string"}]},
+            {"name": "name", "type": "function", "stateMutability": "view", "inputs": [], "outputs": [{"type": "string"}]}]
+
+
+def is_wrapped_bnb(tk):
+    # true when the vault's locked token is Wrapped BNB, so BNB can be wrapped into it one to one
+    try:
+        c = w3.eth.contract(address=tk.address, abi=WBNB_ABI)
+        return c.functions.symbol().call() == "WBNB" and c.functions.name().call() == "Wrapped BNB"
+    except Exception:
+        return False
+
+
+def token_shortfall(tk, need, bal):
+    # BNB alone is not enough to mint: the vault locks its token, BNB only pays the fee and gas. Say which token and how to get it.
+    try:
+        sym = tk.functions.symbol().call()
+    except Exception:
+        sym = "token"
+    how = (f"wrap BNB into {sym} first (ask your Binance Agentic Wallet to swap BNB to {sym}), then mint" if sym.upper() == "WBNB"
+           else f"buy {sym} first, e.g. `gang buy --token {tk.address} --amount <bnb>` (gang CLI), then mint")
+    return (f"not enough {sym} to lock: need {tok_fmt(need)}, have {tok_fmt(bal)}, short {tok_fmt(need - bal)} {sym} "
+            f"(token {tk.address}). Minting locks {sym}; BNB only pays the fee and gas. To fix: {how}.")
+
+
 def cmd_mint(args):
     me = me_of(args)
     if not VAULT.functions.canParticipate(me).call():
@@ -397,14 +423,23 @@ def cmd_mint(args):
     unit = VAULT.functions.UNIT().call()
     need = unit * args.count
     bal = tk.functions.balanceOf(me).call()
-    if bal < need:
-        fail(f"not enough tokens: need {tok_fmt(need)}, have {tok_fmt(bal)}")
     fee = VAULT.functions.feePerUnitFor(me).call() * args.count  # agent fee / public fee per unit, read from chain
     txs = []
+    wrap = 0
+    if bal < need:
+        if not is_wrapped_bnb(tk):
+            fail(token_shortfall(tk, need, bal))
+        # The vault locks WBNB and the wallet holds plain BNB: wrap the missing amount first (WBNB.deposit, 1 BNB -> 1 WBNB)
+        wrap = need - bal
+        have = w3.eth.get_balance(me)
+        if have < wrap + fee:
+            fail(f"not enough BNB: wrapping {tok_fmt(wrap)} BNB into WBNB plus the {eth(fee)} BNB mint fee needs {tok_fmt(wrap + fee)} BNB (plus gas), wallet has {tok_fmt(have)} BNB")
+        wt = w3.eth.contract(address=tk.address, abi=WBNB_ABI)
+        txs.append(tx_of(wt, wt.functions.deposit(), wrap, f"wrap {tok_fmt(wrap)} BNB into WBNB (the vault locks WBNB; you had {tok_fmt(bal)})"))
     if tk.functions.allowance(me, VAULT.address).call() < need:
         txs.append(tx_of(tk, tk.functions.approve(VAULT.address, need), 0, f"approve {tok_fmt(need)} tokens to the vault"))
     txs.append(tx_of(VAULT, VAULT.functions.mint(args.count), fee, f"mint {args.count} soldier(s), lock {tok_fmt(need)} tokens, fee {eth(fee)} BNB"))
-    finish(txs, args, {"count": args.count, "lockTokens": tok_fmt(need), "feeBNB": eth(fee)})
+    finish(txs, args, {"count": args.count, "lockTokens": tok_fmt(need), "feeBNB": eth(fee), **({"wrapBNB": tok_fmt(wrap)} if wrap else {})})
 
 
 def cmd_craft(args):

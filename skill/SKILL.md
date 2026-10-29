@@ -52,7 +52,7 @@ Contract addresses come from the website (`configUrl` in `gangster.json`, https:
 |---|---|---|
 | Project status / fees / limits / my holdings | `gangster status --address 0x…` | [flow.md](references/flow.md) |
 | My NFTs | `gangster my --address 0x…` | [flow.md](references/flow.md) |
-| Mint soldiers | `gangster mint --count N --address 0x…` | [flow.md](references/flow.md#mint) |
+| Mint soldiers (needs the locked token, see `status` → `token`; Wrapped BNB is wrapped from BNB automatically) | `gangster mint --count N --address 0x…` | [flow.md](references/flow.md#mint) |
 | Craft captain / boss | `gangster craft --tier 2\|3 [--ids a,b,c,d] --address 0x…` | [flow.md](references/flow.md#craft) |
 | Burn to get tokens back | `gangster burn --id N --address 0x…` | [flow.md](references/flow.md#burn) |
 | See listings | `gangster market [--tier t] [--limit n]` | [market.md](references/market.md) |
