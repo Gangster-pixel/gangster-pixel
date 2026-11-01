@@ -26,7 +26,7 @@ metadata:
 # Gangster Pixel Skill
 
 Gangster Pixel is a three-tier NFT collection on BNB Chain. Each NFT is a **vault receipt**: it holds a fixed
-number of the project token (the token is launched on gang.fun; NFT features open **after graduation**).
+number of the project token (the token is launched on gang.fun's vault launchpad; minting works **from the bonding curve on**: before graduation the launchpad moves the tokens into the vault and books them against your 1% wallet cap).
 
 | Tier | Units | How to get | Tokens inside |
 |---|---|---|---|
@@ -34,7 +34,7 @@ number of the project token (the token is launched on gang.fun; NFT features ope
 | Captain (2) | 4 | `craft --tier 2`: burn 4 units of lower NFTs | 4 × UNIT |
 | Boss (3) | 16 | `craft --tier 3`: burn 16 units (16 soldiers, 4 captains, or a mix) | 16 × UNIT |
 
-- **burn** any NFT any time → 90% of the locked tokens come back (`refundOf`); 10% stays in the vault and can only be sent to 0xdead by the owner. Fee = `burnFeePerUnit × units` BNB.
+- **burn** any NFT, never pausable → 90% of the locked tokens come back. Before graduation the payout goes through the launchpad: send the tx from your own wallet (no contract in between) and hold a .ai Agent ID; after graduation it is a plain transfer with no such requirement. (`refundOf`); 10% stays in the vault and can only be sent to 0xdead by the owner. Fee = `burnFeePerUnit × units` BNB.
 - mint / craft fee = `feePerUnitFor(address) × units` BNB (shown by `status`; the owner can only lower fees).
 - **Agent-gated**: minting, crafting and *receiving* an NFT all require a .ai Agent ID (`NO_AGENT_ID` otherwise).
 - Transfers are guarded: only the Gangster market may act as operator; no other marketplace works.
@@ -76,4 +76,4 @@ then `baw contract-call execute --requestId <id> --json`. With `--send` the CLI 
 - **Batch buys allow partial fills.** `buy-many` / `sweep` buy one listing per tx; anything sold, cancelled, re-priced above the cap or unaffordable is skipped and the rest continue. Show the user `planned` / `skipped` and the total first; after sending, report `bought`, `failed` and `filled`. For `sweep`, run it **without** `--send` first; after the user confirms, run the `confirmCommand` it prints (a `buy-many` that pins exactly the previewed ids and prices), never `sweep --send`, so the floor cannot change between preview and purchase.
 - **Listings don't escrow.** A listed NFT stays in the seller's wallet; it still counts as avatar and earns dividends. Transferring it elsewhere voids the listing.
 - **No investment advice.** Prices and listings are data.
-- **Errors**: `NO_AGENT_ID` → the wallet has no .ai Agent ID (claim one from the Agentic Wallet banner in the Binance App); `TokenNotSet` → token not graduated yet; `TierSoldOut` / `WalletCap` → limits reached; `minting is paused` → paused by the owner (burn still works).
+- **Errors**: `NO_AGENT_ID` → the wallet has no .ai Agent ID (claim one from the Agentic Wallet banner in the Binance App); `TokenNotSet` → the project token is not set on the vault yet; `NotAgent` / `TraderNotOrigin` from the launchpad → before graduation the caller must be the wallet itself and hold an Agent ID; `VaultDelisted` → the launchpad delisted the vault, minting waits for graduation, burning still works; `TierSoldOut` / `WalletCap` → limits reached; `minting is paused` → paused by the owner (burn still works).

@@ -84,6 +84,37 @@ for _abi in (VAULT.abi, MARKET.abi) + ((DIST.abi,) if DIST else ()):
             _sig = _e["name"] + "(" + ",".join(i["type"] for i in _e["inputs"]) + ")"
             ERRORS[Web3.keccak(text=_sig)[:4].hex().replace("0x", "")] = _e["name"]
 ERRORS["7e273289"] = "ERC721NonexistentToken"
+# gang launchpad (vault pad) errors seen through mint / burn before graduation
+for _sig, _hint in (("NotAgent()", "NotAgent: the launchpad requires the caller to hold a .ai Agent ID before graduation"),
+                    ("TraderNotOrigin()", "TraderNotOrigin: before graduation the wallet itself must send the tx (no contract in between)"),
+                    ("VaultDelisted()", "VaultDelisted: the launchpad has delisted this vault; minting is closed until graduation, burning still works"),
+                    ("AlreadyGraduated()", "AlreadyGraduated"), ("ZeroAmount()", "ZeroAmount"), ("NotVault()", "NotVault"), ("VaultCannotTrade()", "VaultCannotTrade"),
+                    ("TransfersLocked()", "TransfersLocked: the token cannot be transferred before graduation (only mint / burn through the vault)")):
+    ERRORS[Web3.keccak(text=_sig)[:4].hex().replace("0x", "")] = _hint
+PAD_ABI = json.loads('[{"name":"isVault","type":"function","stateMutability":"view","inputs":[{"name":"v","type":"address"}],"outputs":[{"type":"bool"}]},'
+                     '{"name":"lockedOf","type":"function","stateMutability":"view","inputs":[{"name":"t","type":"address"},{"name":"u","type":"address"}],"outputs":[{"type":"uint256"}]},'
+                     '{"name":"walletRoom","type":"function","stateMutability":"view","inputs":[{"name":"t","type":"address"},{"name":"u","type":"address"}],"outputs":[{"type":"uint256"}]}]')
+LOCKED_ABI = json.loads('[{"name":"locked","type":"function","stateMutability":"view","inputs":[],"outputs":[{"type":"bool"}]}]')
+
+
+def curve_info(tok_addr, me=None):
+    # Pre-graduation view: is the token still on the bonding curve, is the vault listed on the pad, what the pad books for `me`
+    out = {}
+    try:
+        out["tokenLocked"] = w3.eth.contract(address=tok_addr, abi=LOCKED_ABI).functions.locked().call()
+    except Exception:
+        return out
+    try:
+        pad = w3.eth.contract(address=VAULT.functions.PAD().call(), abi=PAD_ABI)
+        out["padListed"] = pad.functions.isVault(VAULT.address).call()
+        if me and out["tokenLocked"]:
+            out["lockedOnPad"] = tok_fmt(pad.functions.lockedOf(tok_addr, me).call())
+            out["walletRoom"] = tok_fmt(pad.functions.walletRoom(tok_addr, me).call())
+    except Exception:
+        pass
+    if out.get("tokenLocked"):
+        out["note"] = "Token is still on the bonding curve: mint locks through the launchpad (counts toward your 1% cap); burn needs your own wallet to send the tx and a .ai Agent ID; the launchpad must be running. After graduation none of this applies."
+    return out
 
 
 def decode_err(e):
@@ -278,6 +309,7 @@ def cmd_status(args):
         "burnFeePerUnitBNB": eth(VAULT.functions.burnFeePerUnit().call()),
         "marketFeePct": MARKET.functions.feeBps().call() / 100,
         "mintPaused": VAULT.functions.mintPaused().call(),
+        **({"curve": curve_info(tok, getattr(args, "address", None))} if int(tok, 16) else {}),
         "publicMintEnabled": VAULT.functions.publicMintEnabled().call(),
         "publicFeePerUnitBNB": eth(VAULT.functions.publicFeePerUnit().call()),
         "burnKeepPct": VAULT.functions.burnKeepBps().call() / 100,
