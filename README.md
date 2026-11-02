@@ -61,4 +61,11 @@ README.zh-CN.md   Chinese README
 
 ## Contracts
 
-The skill loads them from `https://meta.gangsterpixel.com/skill/gangster.json` on every run and stops if a pinned address differs · also `GET https://meta.gangsterpixel.com/api/stats`. Chain: BNB Smart Chain (56).
+| Contract | Address (BscScan, source verified) |
+|---|---|
+| Vault (NFT + locked tokens) | [`0xd6eCDF1CecC2A0b44C2AB6d521F084f32f1eb4FE`](https://bscscan.com/address/0xd6eCDF1CecC2A0b44C2AB6d521F084f32f1eb4FE#code) |
+| Market | [`0x8488Eb76B45Af851027029C8d586e86435AAC218`](https://bscscan.com/address/0x8488Eb76B45Af851027029C8d586e86435AAC218#code) |
+| Distributor (dividends) | [`0xBcd5FC7F86b1460AFB69bb1d95bB05d1cB274698`](https://bscscan.com/address/0xBcd5FC7F86b1460AFB69bb1d95bB05d1cB274698#code) |
+| Agent ID registry | [`0x60b9262456de011f7d15a54cdd8c48baaa8b022f`](https://bscscan.com/address/0x60b9262456de011f7d15a54cdd8c48baaa8b022f#code) |
+
+Chain: BNB Smart Chain (56). Source code: [`contracts/`](contracts/) (same as verified on BscScan). Also `GET https://meta.gangsterpixel.com/api/stats` → `contracts`.

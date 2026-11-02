@@ -61,4 +61,11 @@ README.md         英文 README
 
 ## 合约地址
 
-skill 每次运行都从 `https://meta.gangsterpixel.com/skill/gangster.json` 读取，固定的地址和网站不一致时会停下，也可以看 `GET https://meta.gangsterpixel.com/api/stats`。链：BNB Smart Chain（56）。
+| 合约 | 地址（BscScan，源码已验证） |
+|---|---|
+| 金库（NFT + 锁仓代币） | [`0xd6eCDF1CecC2A0b44C2AB6d521F084f32f1eb4FE`](https://bscscan.com/address/0xd6eCDF1CecC2A0b44C2AB6d521F084f32f1eb4FE#code) |
+| 市场 | [`0x8488Eb76B45Af851027029C8d586e86435AAC218`](https://bscscan.com/address/0x8488Eb76B45Af851027029C8d586e86435AAC218#code) |
+| 分红 | [`0xBcd5FC7F86b1460AFB69bb1d95bB05d1cB274698`](https://bscscan.com/address/0xBcd5FC7F86b1460AFB69bb1d95bB05d1cB274698#code) |
+| Agent ID 注册表 | [`0x60b9262456de011f7d15a54cdd8c48baaa8b022f`](https://bscscan.com/address/0x60b9262456de011f7d15a54cdd8c48baaa8b022f#code) |
+
+链：BNB Smart Chain（56）。源码：[`contracts/`](contracts/)（与 BscScan 验证的一致）。也可以看 `GET https://meta.gangsterpixel.com/api/stats` → `contracts`。

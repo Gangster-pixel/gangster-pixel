@@ -3,5 +3,9 @@
   "rpc": "https://bsc-rpc.publicnode.com",
   "configUrl": "https://meta.gangsterpixel.com/skill/gangster.json",
   "rounds": "https://meta.gangsterpixel.com/rounds/{id}.json",
+  "vault": "0xd6eCDF1CecC2A0b44C2AB6d521F084f32f1eb4FE",
+  "market": "0x8488Eb76B45Af851027029C8d586e86435AAC218",
+  "distributor": "0xBcd5FC7F86b1460AFB69bb1d95bB05d1cB274698",
+  "deployBlock": 131168100,
   "_comment": "Gangster Pixel skill config. Contract addresses come from configUrl on every run; if addresses are pinned here and the website lists different ones, the skill stops."
 }

@@ -13,8 +13,12 @@ Only Binance Agentic Wallets holding a **.ai Agent ID** can mint / craft / recei
 
 ## 2. Contracts (BSC, chain id 56)
 
-The skill loads the Vault / Market / Distributor addresses from `https://meta.gangsterpixel.com/skill/gangster.json` on every run; `GET https://meta.gangsterpixel.com/api/stats` → `contracts` lists them too.
-Agent ID registry: 0x60b9262456de011f7d15a54cdd8c48baaa8b022f
+| Contract | Address |
+|---|---|
+| Vault (NFT + locked tokens) | 0xd6eCDF1CecC2A0b44C2AB6d521F084f32f1eb4FE |
+| Market | 0x8488Eb76B45Af851027029C8d586e86435AAC218 |
+| Distributor (dividends) | 0xBcd5FC7F86b1460AFB69bb1d95bB05d1cB274698 |
+| Agent ID registry | 0x60b9262456de011f7d15a54cdd8c48baaa8b022f |
 
 Fees, caps and tokens-per-unit are read from chain: `gangster status`, or `GET https://meta.gangsterpixel.com/api/stats` → `params`.
 
