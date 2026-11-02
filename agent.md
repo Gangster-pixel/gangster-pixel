@@ -25,7 +25,7 @@ Fees, caps and tokens-per-unit are read from chain: `gangster status`, or `GET h
 ## 3. What the user needs first
 
 1. Binance App → Wallet → **Agentic Wallet** → create. Claim a **.ai Agent ID** from the banner. In settings enable **Developer Mode** and **Trade all tokens**. Fund a little BNB (fees + gas).
-2. Hold the project token (launched on gang.fun; minting works from the bonding curve on, before and after graduation). Buy with the gang CLI: `gang buy --token <CA> --amount 0.1`.
+2. Hold the project token (launched on gang.fun; minting works from the bonding curve on, before and after graduation). Buy with the gang CLI **0.27.0 or newer** (older versions cannot buy on the vault launchpad; re-run the install line to upgrade): `gang buy --token <CA> --amount 0.1`.
 
 ## 4. Install
 
@@ -34,7 +34,7 @@ Fees, caps and tokens-per-unit are read from chain: `gangster status`, or `GET h
 npm i -g @binance/agentic-wallet
 npx skills add binance/binance-skills-hub/skills/binance-web3/binance-agentic-wallet
 # gang CLI (to buy the token, optional)
-npm i -g @gangfun/cli@latest
+npm i -g @gangfun/cli@latest   # 0.27.0 or newer
 # gangster skill — option A: from GitHub
 npx skills add Gangster-pixel/gangster-pixel/skill
 # gangster skill — option B: download the files
