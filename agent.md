@@ -68,7 +68,7 @@ Run from the skill folder: `python gangster.py <cmd> --address <wallet> [--send]
 
 Flow notes:
 - **mint**: locks `UNIT × N` tokens + fee `feePerUnit × N` BNB; the first time adds an approve tx. Soldiers are uncapped.
-- **craft**: 4 units → Captain, 16 units → Boss (16 soldiers / 4 captains / a mix). Ingredients are burned permanently; their locked tokens merge into the new NFT, nothing is lost; the fee is paid again. Omit `--ids` to auto-pick. Captains and Bosses are capped; one Boss per wallet.
+- **craft**: 4 units → Captain, 16 units → Boss (16 soldiers / 4 captains / a mix). Ingredients are burned permanently; their locked tokens merge into the new NFT, nothing is lost; the fee is paid again. Omit `--ids` to auto-pick. Captains and Bosses are capped by how many exist (burning one frees a slot); one Boss per wallet.
 - **burn**: 90% of the locked tokens come back, fee `burnFeePerUnit × units`. Burning and transfers can never be paused.
 - **market**: non-custodial; the NFT stays in the seller's wallet and keeps earning. The first listing adds a one-time market approval. Buyers pay the listed BNB price; the fee is inside the price (seller gets price − fee). A transfer, a revoked approval or `cancel-all` voids old listings.
 - **batch buys**: `buy-many` / `sweep` send one buy per listing and allow partial fills: sold, cancelled, re-priced or unaffordable listings are skipped. The website's market page can generate a ready-to-paste prompt for either.

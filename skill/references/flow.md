@@ -5,7 +5,7 @@ All amounts in output are human-readable (tokens with 18 decimals applied, BNB i
 ## `gangster status --address <addr>`
 
 Read-only. `unitTokens` = tokens locked per unit. `mintFeePerUnitBNB` / `burnFeePerUnitBNB` are per unit (soldier ×1, captain ×4, boss ×16).
-`minted` / `maxMint` are lifetime counters (burned NFTs do not free a slot).
+`minted` = NFTs of that tier in existence now; `maxMint` caps that number (burning one, or using it as a craft ingredient, frees its slot).
 `me` block: `isAgent`, `highestTier`, `held` per tier, `claimableRounds`, `tokenBalance`, `allowanceToVault`, `marketApproved`.
 
 ## `gangster my --address <addr>`
