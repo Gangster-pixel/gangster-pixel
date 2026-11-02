@@ -25,7 +25,7 @@ Fees, caps and tokens-per-unit are read from chain: `gangster status`, or `GET h
 ## 3. What the user needs first
 
 1. Binance App → Wallet → **Agentic Wallet** → create. Claim a **.ai Agent ID** from the banner. In settings enable **Developer Mode** and **Trade all tokens**. Fund a little BNB (fees + gas).
-2. Hold the project token (launched on gang.fun; NFT features open after graduation). Buy with the gang CLI: `gang buy --token <CA> --amount 0.1`.
+2. Hold the project token (launched on gang.fun; minting works from the bonding curve on, before and after graduation). Buy with the gang CLI: `gang buy --token <CA> --amount 0.1`.
 
 ## 4. Install
 
