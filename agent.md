@@ -84,7 +84,7 @@ Flow notes:
 - Send every `value` exactly as returned; the contract rejects any other amount (`WrongFee`).
 - A tx that burns several NFTs (craft) is flagged high-risk by Binance: `execute` returns `PENDING_CONFIRMATION`; ask the user to confirm in the Binance App. The CLI waits up to 10 minutes.
 - No investment advice; prices and listings are data.
-- Errors: `NO_AGENT_ID` no .ai Agent ID; `TokenNotSet` token not graduated; `TierSoldOut` / `WalletCap` cap reached; `minting is paused` affects only mint / craft.
+- Errors: `NO_AGENT_ID` no .ai Agent ID; `TokenNotSet` the vault has no project token set yet (set within minutes of the launch); `TierSoldOut` / `WalletCap` cap reached; `minting is paused` affects only mint / craft.
 
 ## 7. Read-only API (no auth, CORS enabled)
 
